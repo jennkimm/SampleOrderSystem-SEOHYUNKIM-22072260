@@ -2,12 +2,15 @@ package com.ssemi.sampleorder.service;
 
 import com.ssemi.sampleorder.model.Order;
 import com.ssemi.sampleorder.model.OrderStatus;
+import com.ssemi.sampleorder.model.ProductionLine;
 import com.ssemi.sampleorder.model.Sample;
 import com.ssemi.sampleorder.repository.OrderRepository;
 import com.ssemi.sampleorder.repository.SampleRepository;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class OrderService {
 
@@ -28,16 +31,39 @@ public class OrderService {
         orderRepository.save(new Order(orderId, sampleId, customerName, quantity, OrderStatus.RESERVED));
     }
 
-    public OrderStatus approve(String orderId) throws IOException {
+    public OrderStatus approve(String orderId, List<ProductionLine> productionQueue) throws IOException {
         Order order = orderRepository.findById(orderId);
         if (order.getStatus() != OrderStatus.RESERVED) {
             throw new IllegalStateException("RESERVED 상태의 주문만 승인할 수 있습니다. 현재 상태: " + order.getStatus());
         }
-        Sample sample = sampleRepository.findById(order.getSampleId());
-        OrderStatus next = sample.getStock() >= order.getQuantity() ? OrderStatus.CONFIRMED : OrderStatus.PRODUCING;
+        int effectiveStock = computeEffectiveStock(order.getSampleId(), productionQueue);
+        OrderStatus next = effectiveStock >= order.getQuantity() ? OrderStatus.CONFIRMED : OrderStatus.PRODUCING;
         order.setStatus(next);
         orderRepository.update(order);
         return next;
+    }
+
+    private int computeEffectiveStock(String sampleId, List<ProductionLine> productionQueue) throws IOException {
+        Sample sample = sampleRepository.findById(sampleId);
+
+        int confirmedQty = orderRepository.findByStatus(OrderStatus.CONFIRMED).stream()
+                .filter(o -> o.getSampleId().equals(sampleId))
+                .mapToInt(Order::getQuantity).sum();
+
+        List<Order> producingOrders = orderRepository.findByStatus(OrderStatus.PRODUCING).stream()
+                .filter(o -> o.getSampleId().equals(sampleId))
+                .collect(Collectors.toList());
+
+        int producingQty = producingOrders.stream().mapToInt(Order::getQuantity).sum();
+
+        Set<String> producingOrderIds = producingOrders.stream()
+                .map(Order::getOrderId).collect(Collectors.toSet());
+
+        int scheduledQty = productionQueue.stream()
+                .filter(pl -> producingOrderIds.contains(pl.getOrderId()))
+                .mapToInt(ProductionLine::getScheduledQty).sum();
+
+        return sample.getStock() + scheduledQty - confirmedQty - producingQty;
     }
 
     public void reject(String orderId) throws IOException {
@@ -61,10 +87,10 @@ public class OrderService {
         orderRepository.update(order);
     }
 
-    public int getShortfall(String orderId) throws IOException {
+    public int getShortfall(String orderId, List<ProductionLine> productionQueue) throws IOException {
         Order order = orderRepository.findById(orderId);
-        Sample sample = sampleRepository.findById(order.getSampleId());
-        return Math.max(0, order.getQuantity() - sample.getStock());
+        int effectiveStock = computeEffectiveStock(order.getSampleId(), productionQueue);
+        return Math.max(0, order.getQuantity() - effectiveStock);
     }
 
     public List<Order> getReserved() throws IOException {

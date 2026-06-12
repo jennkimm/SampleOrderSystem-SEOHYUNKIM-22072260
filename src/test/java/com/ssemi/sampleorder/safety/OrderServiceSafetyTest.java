@@ -11,6 +11,7 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -47,7 +48,7 @@ class OrderServiceSafetyTest {
         sampleRepo.save(new Sample("S001", "AlphaChip", 30.0, 0.9, 50));
         orderRepo.save(new Order("O001", "S001", "홍길동", 50, OrderStatus.RESERVED));
 
-        orderService.approve("O001");
+        orderService.approve("O001", List.of());
 
         assertThat(orderRepo.findAll().get(0).getStatus()).isEqualTo(OrderStatus.CONFIRMED);
     }
@@ -68,7 +69,7 @@ class OrderServiceSafetyTest {
     void 이미_처리된_주문_재승인_시_예외가_발생한다() throws IOException {
         orderRepo.save(new Order("O001", "S001", "홍길동", 50, OrderStatus.CONFIRMED));
 
-        assertThatThrownBy(() -> orderService.approve("O001"))
+        assertThatThrownBy(() -> orderService.approve("O001", List.of()))
                 .isInstanceOf(IllegalStateException.class);
     }
 }

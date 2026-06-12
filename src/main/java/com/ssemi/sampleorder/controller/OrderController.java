@@ -2,6 +2,7 @@ package com.ssemi.sampleorder.controller;
 
 import com.ssemi.sampleorder.model.Order;
 import com.ssemi.sampleorder.model.OrderStatus;
+import com.ssemi.sampleorder.model.ProductionLine;
 import com.ssemi.sampleorder.service.OrderService;
 import com.ssemi.sampleorder.service.ProductionService;
 import com.ssemi.sampleorder.view.ConsoleView;
@@ -68,7 +69,8 @@ public class OrderController {
             }
             view.printOrderList(reserved);
             String orderId = view.promptOrderId();
-            int shortfall = service.getShortfall(orderId);
+            List<ProductionLine> queue = productionService.getQueue();
+            int shortfall = service.getShortfall(orderId, queue);
             if (shortfall > 0) {
                 view.printStockShortfallWarning(shortfall);
                 if (!view.promptYesNo()) {
@@ -77,7 +79,7 @@ public class OrderController {
                     return;
                 }
             }
-            OrderStatus newStatus = service.approve(orderId);
+            OrderStatus newStatus = service.approve(orderId, queue);
             view.printApprovalResult(orderId, newStatus);
             if (newStatus == OrderStatus.PRODUCING) {
                 productionService.enqueue(orderId);

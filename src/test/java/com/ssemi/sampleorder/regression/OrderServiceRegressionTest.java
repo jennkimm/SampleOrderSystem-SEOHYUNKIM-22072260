@@ -11,6 +11,7 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -47,7 +48,7 @@ class OrderServiceRegressionTest {
         sampleRepo.save(new Sample("S001", "AlphaChip", 30.0, 0.9, 100));
         orderRepo.save(new Order("O001", "S001", "홍길동", 50, OrderStatus.RESERVED));
 
-        orderService.approve("O001");
+        orderService.approve("O001", List.of());
 
         assertThat(orderRepo.findAll().get(0).getStatus()).isEqualTo(OrderStatus.CONFIRMED);
     }
@@ -59,7 +60,7 @@ class OrderServiceRegressionTest {
         sampleRepo.save(new Sample("S001", "AlphaChip", 30.0, 0.9, 30));
         orderRepo.save(new Order("O001", "S001", "홍길동", 50, OrderStatus.RESERVED));
 
-        orderService.approve("O001");
+        orderService.approve("O001", List.of());
 
         assertThat(orderRepo.findAll().get(0).getStatus()).isEqualTo(OrderStatus.PRODUCING);
     }
