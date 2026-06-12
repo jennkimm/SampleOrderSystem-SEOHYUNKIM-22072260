@@ -1,6 +1,7 @@
 package com.ssemi.sampleorder.repository;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.ssemi.sampleorder.exception.DataNotFoundException;
 import com.ssemi.sampleorder.model.Sample;
 
 import java.io.IOException;
@@ -36,8 +37,8 @@ public class SampleRepository {
         return fileRepo.readAll().stream()
                 .filter(s -> s.getSampleId().equals(sampleId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "ID " + sampleId + " 에 해당하는 시료을(를) 찾을 수 없습니다."));
+                .orElseThrow(() -> new DataNotFoundException(
+                        "ID " + sampleId + " 에 해당하는 시료를 찾을 수 없습니다."));
     }
 
     public void update(Sample sample) throws IOException {

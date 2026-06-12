@@ -1,6 +1,7 @@
 package com.ssemi.sampleorder.repository;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.ssemi.sampleorder.exception.DataNotFoundException;
 import com.ssemi.sampleorder.model.Order;
 import com.ssemi.sampleorder.model.OrderStatus;
 
@@ -44,7 +45,7 @@ public class OrderRepository {
         return fileRepo.readAll().stream()
                 .filter(o -> o.getOrderId().equals(orderId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "ID " + orderId + " 에 해당하는 주문을(를) 찾을 수 없습니다."));
+                .orElseThrow(() -> new DataNotFoundException(
+                        "ID " + orderId + " 에 해당하는 주문을 찾을 수 없습니다."));
     }
 }

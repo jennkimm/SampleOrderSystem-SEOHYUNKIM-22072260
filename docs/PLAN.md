@@ -11,7 +11,7 @@
 |---|---|
 | `Sample` | `sampleId`, `name`, `avgProductionTime` (double, 분, 소수점 한 자리), `yieldRate` (0.0~1.0), `stock` (ea) |
 | `Order` | `orderId`, `sampleId`, `customerName`, `quantity`, `status` |
-| `ProductionLine` | `orderId`, `scheduledQty`, `producedQty`, `estimatedTime` |
+| `ProductionLine` | `orderId`, `shortfall`, `scheduledQty`, `producedQty`, `estimatedTime` |
 
 **생산량·시간 계산 공식** (Phase 4에서 구현):
 ```

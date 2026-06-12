@@ -37,8 +37,10 @@ CONFIRMED 주문을 출고 처리하여 재고를 차감하는 흐름을 완성�
 | 상태 | 조건 |
 |---|---|
 | DEPLETED (고갈) | `stock == 0` |
-| INSUFFICIENT (부족) | `0 < stock < CONFIRMED 주문 합계 수량` |
-| SUFFICIENT (여유) | `stock >= CONFIRMED 주문 합계 수량` (CONFIRMED 주문 없는 경우 포함) |
+| INSUFFICIENT (부족) | `0 < stock < (CONFIRMED + PRODUCING) 주문 합계 수량` |
+| SUFFICIENT (여유) | `stock >= (CONFIRMED + PRODUCING) 주문 합계 수량` (해당 주문 없는 경우 포함) |
+
+> **판정 기준 설명**: CONFIRMED(출고 대기)와 PRODUCING(생산 중) 주문 모두 향후 재고에서 차감될 수량이므로 합산하여 재고 건전성을 판단한다. `MonitoringService.getTotalPendingQty(sampleId)`가 두 상태의 수량 합계를 반환하고, `judgeStockStatus(sample, pendingQty)`에 전달된다.
 
 ---
 
@@ -176,4 +178,25 @@ Cycle 5로 고갈 판정이 완성되면 부족 판정을 추가한다. 두 케�
 
 ## REVIEW 결과
 
-(개발 완료 후 기록 예정)
+### 테스트 실행 결과
+
+| Cycle | 테스트 메서드 | 결과 |
+|---|---|---|
+| 1 | `출고_처리_시_RELEASE_전환_및_재고가_차감된다` | ✅ PASSED |
+| 2 (Safety) | `CONFIRMED_아닌_주문_출고_시_예외가_발생한다` | ✅ PASSED |
+| 3 (Safety) | `이미_출고된_주문_재출고_시_예외가_발생한다` | ✅ PASSED |
+| 4 | `상태별_주문_집계_시_REJECTED는_제외된다` | ✅ PASSED |
+| 5 | `재고_0이면_DEPLETED로_판정된다` | ✅ PASSED |
+| 6 | `재고가_CONFIRMED_합계보다_적으면_INSUFFICIENT로_판정된다` | ✅ PASSED |
+
+### 구현된 클래스
+
+- `model/StockStatus`: SUFFICIENT / INSUFFICIENT / DEPLETED + 한국어 label
+- `service/MonitoringService`: `getOrderSummary()`, `getStockStatusMap()`, `judgeStockStatus()`, `getTotalPendingQty()`
+- `service/OrderService.release()`: CONFIRMED → RELEASE 전환 + `sample.stock -= quantity`
+- `controller/MonitoringController`: 주문 현황 조회, 시료 재고 현황 표시
+- `controller/ReleaseController`: CONFIRMED 목록 조회, 출고 처리
+
+### 정리 적용
+
+- 재고 판정 기준 수정: Phase 4 구현 후 CONFIRMED만 집계하던 `getTotalConfirmedQty()`를 CONFIRMED + PRODUCING 합산 집계 `getTotalPendingQty()`로 전환 (PRODUCING 상태 주문도 향후 재고 차감 대상이므로 함께 고려)

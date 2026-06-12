@@ -2,6 +2,7 @@ package com.ssemi.sampleorder.view;
 
 import com.ssemi.sampleorder.model.Order;
 import com.ssemi.sampleorder.model.OrderStatus;
+import com.ssemi.sampleorder.model.ProductionLine;
 import com.ssemi.sampleorder.model.Sample;
 import com.ssemi.sampleorder.model.StockStatus;
 
@@ -212,7 +213,7 @@ public class ConsoleView {
         System.out.print("선택: ");
     }
 
-    public void printProductionQueue(List<com.ssemi.sampleorder.model.ProductionLine> queue) {
+    public void printProductionQueue(List<ProductionLine> queue) {
         if (queue.isEmpty()) {
             System.out.println("  생산 대기 중인 주문이 없습니다.");
             return;
@@ -224,7 +225,7 @@ public class ConsoleView {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
         double cumulativeMinutes = 0;
         for (int i = 0; i < queue.size(); i++) {
-            com.ssemi.sampleorder.model.ProductionLine pl = queue.get(i);
+            ProductionLine pl = queue.get(i);
             cumulativeMinutes += pl.getEstimatedTime();
             LocalTime completionTime = now.plusMinutes(Math.round(cumulativeMinutes));
             System.out.printf("  %-4d %-12s %6d %8d %10s%n",
