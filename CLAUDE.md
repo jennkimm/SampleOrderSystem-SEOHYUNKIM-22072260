@@ -27,7 +27,7 @@ Phase별 상세 목표와 테스트 포인트는 **[docs/PLAN.md](docs/PLAN.md)*
 | Phase | 목표 | 핵심 확인 포인트 |
 |---|---|---|
 | Phase 1 | 프로젝트 골격 + 시료 관리 (등록·조회·검색·JSON 영속성) | 재시작 후 데이터 유지 |
-| Phase 2 | 주문 접수 + 승인/거절 (재고 기반 CONFIRMED/PRODUCING 자동 분기) | 재고 충분·부족 두 케이스 분기 |
+| Phase 2 | 주문 접수 + 승인/거절 (실효 재고 기반 CONFIRMED/PRODUCING 자동 분기) | 재고 충분·부족 분기, 동일 시료 생산 중 승인 차단, 선행 CONFIRMED/PRODUCING 주문 수량 반영한 실효 재고 계산 |
 | Phase 3 | 모니터링 + 출고 처리 (상태별 집계, 재고 차감) | REJECTED 제외 집계, 출고 후 재고 반영 |
 | Phase 4 | 생산 라인 (FIFO 큐, 생산량 공식, 완료 시 CONFIRMED 전환) | 생산 완료 → 출고까지 전체 흐름 완주 |
 
@@ -35,6 +35,12 @@ Phase별 상세 목표와 테스트 포인트는 **[docs/PLAN.md](docs/PLAN.md)*
 
 - **빌드 도구**: Gradle (Gradle Wrapper 사용)
 - **Java 버전**: Java 21
+
+## 런타임 데이터
+
+- `data/` 폴더는 `.gitignore`에 등록되어 git 추적에서 제외된다.
+- 애플리케이션 실행 시 `data/` 폴더가 없으면 자동 생성된다.
+- 데이터 파일 경로: `data/samples.json`, `data/orders.json`, `data/production.json`
 
 ## 빌드 및 실행 명령
 
@@ -49,8 +55,8 @@ gradlew.bat test
 gradlew.bat compileJava
 
 # 특정 테스트 클래스 실행
-gradlew.bat test --tests "regression.ProductRepositoryRegressionTest"
-gradlew.bat test --tests "safety.ProductRepositorySafetyTest"
+gradlew.bat test --tests "com.ssemi.sampleorder.regression.OrderServiceRegressionTest"
+gradlew.bat test --tests "com.ssemi.sampleorder.safety.OrderServiceSafetyTest"
 ```
 
 ## 주요 의존성
@@ -67,8 +73,8 @@ gradlew.bat test --tests "safety.ProductRepositorySafetyTest"
 - 클래스명: `UpperCamelCase`
 - 메서드·변수명: `lowerCamelCase`
 - 상수: `UPPER_SNAKE_CASE`
-- 패키지명: 소문자 (`com.reviewer.poc`)
-- `DataNotFoundException` 메시지 표준 형식: `"ID {id} 에 해당하는 {entity}을(를) 찾을 수 없습니다."`
+- 패키지명: 소문자 (`com.ssemi.sampleorder`)
+- `DataNotFoundException` 메시지 표준 형식: `"ID {id} 에 해당하는 {entity}{조사} 찾을 수 없습니다."` — 조사는 한국어 문법에 맞게 선택 (예: 시료**를**, 주문**을**)
 - 단일 메서드 30줄 초과, 중첩 if/for 3단계 이상은 리팩토링 대상
 
 ## `.claude/` skill 활용
