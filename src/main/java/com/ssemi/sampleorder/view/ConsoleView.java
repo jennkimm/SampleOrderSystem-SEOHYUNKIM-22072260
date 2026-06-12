@@ -218,7 +218,7 @@ public class ConsoleView {
             System.out.println("  생산 대기 중인 주문이 없습니다.");
             return;
         }
-        System.out.println("\n  === 생산 라인 대기 목록 (FIFO) ===");
+        System.out.printf("%n  === 생산 라인 대기 목록 (FIFO) — 총 %d건 ===%n", queue.size());
         System.out.printf("  %-4s %-12s %6s %8s %10s%n", "순서", "주문ID", "부족분", "실생산량", "예상 완료");
         System.out.println("  " + "-".repeat(46));
         LocalTime now = LocalTime.now();
