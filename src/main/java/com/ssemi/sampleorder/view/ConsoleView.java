@@ -210,10 +210,26 @@ public class ConsoleView {
         System.out.print("선택: ");
     }
 
-    public void printProductionCompleteResult(String orderId, int addedQty) {
+    public void printProductionQueue(List<com.ssemi.sampleorder.model.ProductionLine> queue) {
+        if (queue.isEmpty()) {
+            System.out.println("  생산 대기 중인 주문이 없습니다.");
+            return;
+        }
+        System.out.println("\n  === 생산 라인 대기 목록 (FIFO) ===");
+        System.out.printf("  %-4s %-12s %6s %6s %10s%n", "순서", "주문ID", "부족분", "생산량", "예상시간(분)");
+        System.out.println("  " + "-".repeat(46));
+        for (int i = 0; i < queue.size(); i++) {
+            com.ssemi.sampleorder.model.ProductionLine pl = queue.get(i);
+            System.out.printf("  %-4d %-12s %6d %6d %10.1f%n",
+                    i + 1, pl.getOrderId(), pl.getShortfall(),
+                    pl.getScheduledQty(), pl.getEstimatedTime());
+        }
+    }
+
+    public void printProductionCompleteResult(String orderId, int scheduledQty) {
         System.out.println("\n  ✔ 생산 완료 처리됨");
         System.out.printf("    주문 번호 : %s%n", orderId);
-        System.out.printf("    재고 추가 : +%d ea (CONFIRMED 전환)%n", addedQty);
+        System.out.printf("    재고 추가 : +%d ea → CONFIRMED 전환%n", scheduledQty);
     }
 
     public void printMessage(String message) {

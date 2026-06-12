@@ -3,6 +3,7 @@ package com.ssemi.sampleorder.controller;
 import com.ssemi.sampleorder.model.Order;
 import com.ssemi.sampleorder.model.OrderStatus;
 import com.ssemi.sampleorder.service.OrderService;
+import com.ssemi.sampleorder.service.ProductionService;
 import com.ssemi.sampleorder.view.ConsoleView;
 
 import java.io.IOException;
@@ -11,11 +12,13 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService service;
+    private final ProductionService productionService;
     private final ConsoleView view;
 
-    public OrderController(OrderService service, ConsoleView view) {
-        this.service = service;
-        this.view = view;
+    public OrderController(OrderService service, ProductionService productionService, ConsoleView view) {
+        this.service           = service;
+        this.productionService = productionService;
+        this.view              = view;
     }
 
     public void run() {
@@ -76,6 +79,10 @@ public class OrderController {
             }
             OrderStatus newStatus = service.approve(orderId);
             view.printApprovalResult(orderId, newStatus);
+            if (newStatus == OrderStatus.PRODUCING) {
+                productionService.enqueue(orderId);
+                view.printMessage("생산 라인에 등록되었습니다.");
+            }
         } catch (IllegalStateException | IllegalArgumentException e) {
             view.printMessage("[오류] " + e.getMessage());
         } catch (IOException e) {

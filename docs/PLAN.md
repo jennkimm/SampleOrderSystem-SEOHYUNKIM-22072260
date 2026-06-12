@@ -41,28 +41,7 @@
 
 ## Phase 4 — 생산 라인
 
-### 목표
-PRODUCING 상태 주문의 생산 스케줄링을 FIFO 큐로 관리하고,
-생산 완료 시 CONFIRMED로 전환하는 생산 라인 기능을 완성하여 전체 주문 흐름을 닫는다.
-
-### 구현 범위
-- `ProductionLine` 엔티티 (도메인 모델 참조)
-- `ProductionQueue` — `java.util.Queue<ProductionLine>` FIFO 구조, JSON 영속화
-- Phase 2의 PRODUCING 전환 시점에 `ProductionLine` 생성 및 큐 enqueue
-- 생산량·시간 계산 공식 구현 (도메인 모델 공식 참조, `Math.ceil` 사용)
-- 생산 현황 표시: 현재 큐 head의 주문 정보·예상 생산량·예상 시간
-- 대기 주문(큐 전체) 목록 출력
-- 생산 완료 처리: 큐에서 dequeue → `PRODUCING` → `CONFIRMED` + `sample.stock += scheduledQty`
-- Regression Test: 공식 계산 정확성, FIFO 순서 보장, 완료 후 상태 전환
-- Safety Test: 큐 비어있을 때 완료 처리 시도, yieldRate 경계값(0, 1)
-
-### 테스트 포인트 (사용자 확인 항목)
-- [ ] 재고 부족 주문 승인 시 생산 라인에 자동 등록되는가
-- [ ] 생산 큐가 FIFO 순서(먼저 들어온 것이 먼저 출력)로 표시되는가
-- [ ] 생산량이 공식(`ceil(부족분 / (수율 × 0.9))`)대로 올림 처리되는가
-- [ ] 생산 완료 처리 후 주문이 CONFIRMED로 전환되는가
-- [ ] 생산 완료 후 해당 시료의 재고가 증가하는가
-- [ ] 생산 완료 → 출고(Phase 3)까지 이어지는 전체 흐름이 동작하는가
+> 상세 설계·TDD 사이클·REVIEW 결과 → **[docs/design/phase4.md](design/phase4.md)**
 
 ---
 

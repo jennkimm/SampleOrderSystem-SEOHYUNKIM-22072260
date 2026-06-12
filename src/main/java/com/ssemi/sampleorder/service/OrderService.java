@@ -49,18 +49,6 @@ public class OrderService {
         orderRepository.update(order);
     }
 
-    public void completeProduction(String orderId) throws IOException {
-        Order order = orderRepository.findById(orderId);
-        if (order.getStatus() != OrderStatus.PRODUCING) {
-            throw new IllegalStateException("PRODUCING 상태의 주문만 생산 완료 처리할 수 있습니다. 현재 상태: " + order.getStatus());
-        }
-        Sample sample = sampleRepository.findById(order.getSampleId());
-        sample.setStock(sample.getStock() + order.getQuantity());
-        sampleRepository.update(sample);
-        order.setStatus(OrderStatus.CONFIRMED);
-        orderRepository.update(order);
-    }
-
     public void release(String orderId) throws IOException {
         Order order = orderRepository.findById(orderId);
         if (order.getStatus() != OrderStatus.CONFIRMED) {

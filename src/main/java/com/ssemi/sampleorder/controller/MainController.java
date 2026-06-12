@@ -2,6 +2,7 @@ package com.ssemi.sampleorder.controller;
 
 import com.ssemi.sampleorder.service.MonitoringService;
 import com.ssemi.sampleorder.service.OrderService;
+import com.ssemi.sampleorder.service.ProductionService;
 import com.ssemi.sampleorder.service.SampleService;
 import com.ssemi.sampleorder.view.ConsoleView;
 
@@ -18,14 +19,15 @@ public class MainController {
     private final ProductionController productionController;
 
     public MainController(SampleService sampleService, OrderService orderService,
-                          MonitoringService monitoringService, ConsoleView view) {
+                          MonitoringService monitoringService, ProductionService productionService,
+                          ConsoleView view) {
         this.sampleService        = sampleService;
         this.view                 = view;
         this.sampleController     = new SampleController(sampleService, view);
-        this.orderController      = new OrderController(orderService, view);
+        this.orderController      = new OrderController(orderService, productionService, view);
         this.monitoringController = new MonitoringController(monitoringService, view);
         this.releaseController    = new ReleaseController(orderService, view);
-        this.productionController = new ProductionController(orderService, view);
+        this.productionController = new ProductionController(productionService, view);
     }
 
     public void run() {
