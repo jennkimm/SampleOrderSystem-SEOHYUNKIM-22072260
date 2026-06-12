@@ -23,7 +23,7 @@ public class ConsoleView {
         System.out.println("  2. 주문 (접수 / 승인 / 거절)");
         System.out.println("  3. 모니터링");
         System.out.println("  4. 출고 처리");
-        System.out.println("  5. 생산 라인                  [준비 중]");
+        System.out.println("  5. 생산 라인");
         System.out.println("  0. 종료");
         System.out.println("========================================");
         System.out.print("선택: ");
@@ -200,6 +200,20 @@ public class ConsoleView {
         System.out.println("  2. 출고 처리");
         System.out.println("  0. 메인 메뉴로");
         System.out.print("선택: ");
+    }
+
+    public void printProductionMenu() {
+        System.out.println("\n--- 생산 라인 ---");
+        System.out.println("  1. 생산 중 주문 목록 조회 (PRODUCING)");
+        System.out.println("  2. 생산 완료 처리 (PRODUCING → CONFIRMED)");
+        System.out.println("  0. 메인 메뉴로");
+        System.out.print("선택: ");
+    }
+
+    public void printProductionCompleteResult(String orderId, int addedQty) {
+        System.out.println("\n  ✔ 생산 완료 처리됨");
+        System.out.printf("    주문 번호 : %s%n", orderId);
+        System.out.printf("    재고 추가 : +%d ea (CONFIRMED 전환)%n", addedQty);
     }
 
     public void printMessage(String message) {

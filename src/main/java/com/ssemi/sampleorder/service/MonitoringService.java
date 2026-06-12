@@ -45,9 +45,12 @@ public class MonitoringService {
         return sampleRepository.findAll();
     }
 
-    public int getTotalConfirmedQty(String sampleId) throws IOException {
-        return orderRepository.findByStatus(OrderStatus.CONFIRMED).stream()
+    // 재고 상태 판단 기준: CONFIRMED(출고 대기) + PRODUCING(생산 중) 수량 합산
+    public int getTotalPendingQty(String sampleId) throws IOException {
+        return orderRepository.findAll().stream()
                 .filter(o -> o.getSampleId().equals(sampleId))
+                .filter(o -> o.getStatus() == OrderStatus.CONFIRMED
+                          || o.getStatus() == OrderStatus.PRODUCING)
                 .mapToInt(Order::getQuantity)
                 .sum();
     }

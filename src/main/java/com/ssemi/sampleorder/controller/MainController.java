@@ -15,6 +15,7 @@ public class MainController {
     private final OrderController orderController;
     private final MonitoringController monitoringController;
     private final ReleaseController releaseController;
+    private final ProductionController productionController;
 
     public MainController(SampleService sampleService, OrderService orderService,
                           MonitoringService monitoringService, ConsoleView view) {
@@ -24,6 +25,7 @@ public class MainController {
         this.orderController      = new OrderController(orderService, view);
         this.monitoringController = new MonitoringController(monitoringService, view);
         this.releaseController    = new ReleaseController(orderService, view);
+        this.productionController = new ProductionController(orderService, view);
     }
 
     public void run() {
@@ -36,7 +38,7 @@ public class MainController {
                     case 2 -> orderController.run();
                     case 3 -> monitoringController.run();
                     case 4 -> releaseController.run();
-                    case 5 -> view.printMessage("아직 준비 중인 기능입니다.");
+                    case 5 -> productionController.run();
                     case 0 -> {
                         view.printMessage("시스템을 종료합니다.");
                         return;

@@ -46,7 +46,7 @@ public class MonitoringController {
             List<Sample> samples = service.getAllSamples();
             Map<String, StockStatus> statusMap = new LinkedHashMap<>();
             for (Sample s : samples) {
-                int confirmedQty = service.getTotalConfirmedQty(s.getSampleId());
+                int confirmedQty = service.getTotalPendingQty(s.getSampleId());
                 statusMap.put(s.getSampleId(), service.judgeStockStatus(s, confirmedQty));
             }
             view.printStockStatusSummary(samples, statusMap);
