@@ -1,0 +1,13 @@
+[ {
+  "sampleId" : "S-001",
+  "name" : "실리콘 웨이퍼-12인치",
+  "avgProductionTime" : 1.0,
+  "yieldRate" : 0.9,
+  "stock" : 400
+}, {
+  "sampleId" : "S-002",
+  "name" : "산화막 웨이퍼",
+  "avgProductionTime" : 0.5,
+  "yieldRate" : 0.92,
+  "stock" : 220
+} ]

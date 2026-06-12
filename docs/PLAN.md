@@ -1,0 +1,129 @@
+# PLAN.md — 반도체 시료 생산주문관리 시스템 구현 계획
+
+> 각 Phase는 독립적으로 실행·테스트 가능한 동작하는 SW를 목표로 한다.
+> 도메인 요구사항은 [AGENTS.md](../AGENTS.md), 개발 환경·PoC 참조는 [CLAUDE.md](../CLAUDE.md) 참조.
+
+---
+
+## 도메인 모델 (공통 기술 참조)
+
+| 엔티티 | 속성 |
+|---|---|
+| `Sample` | `sampleId`, `name`, `avgProductionTime` (double, 분, 소수점 한 자리), `yieldRate` (0.0~1.0), `stock` (ea) |
+| `Order` | `orderId`, `sampleId`, `customerName`, `quantity`, `status` |
+| `ProductionLine` | `orderId`, `scheduledQty`, `producedQty`, `estimatedTime` |
+
+**생산량·시간 계산 공식** (Phase 4에서 구현):
+```
+실 생산량  = ceil(부족분 / (yieldRate × 0.9))   ← 올림 처리
+총 생산시간 = avgProductionTime × 실 생산량
+```
+
+---
+
+## Phase 1 — 프로젝트 골격 + 시료 관리
+
+> 상세 설계·TDD 사이클·REVIEW 결과 → **[docs/design/phase1.md](design/phase1.md)**
+
+---
+
+## Phase 2 — 주문 접수 + 승인/거절
+
+### 목표
+고객 주문을 접수하고, 재고 상황에 따라 자동 분기(CONFIRMED / PRODUCING)하는 승인 로직을 완성한다.
+
+### 구현 범위
+- `Order` 엔티티 (도메인 모델 참조)
+- `OrderStatus` enum: `RESERVED`, `CONFIRMED`, `PRODUCING`, `REJECTED`, `RELEASE`
+- 주문 접수: 시료 ID·고객명·수량 입력 → `RESERVED` 저장
+- RESERVED 목록 조회
+- 주문 승인 분기:
+  - `stock >= quantity` → 즉시 `CONFIRMED`
+  - `stock < quantity` → `PRODUCING` (생산 라인 UI는 Phase 4, 상태만 전환)
+- 주문 거절: `REJECTED`
+- 예외 처리: 미등록 시료 ID로 주문 시도, 이미 처리된 주문 재승인 시도
+- Regression Test: 분기 로직 정상 동작 검증
+- Safety Test: 재고 경계값(정확히 일치), 음수 수량 입력
+
+### 테스트 포인트 (사용자 확인 항목)
+- [ ] 주문 접수 후 RESERVED 목록에 표시되는가
+- [ ] 재고가 충분한 시료를 승인하면 CONFIRMED로 전환되는가
+- [ ] 재고가 부족한 시료를 승인하면 PRODUCING으로 전환되는가
+- [ ] 거절 처리 후 해당 주문이 RESERVED 목록에서 사라지는가
+- [ ] 존재하지 않는 시료 ID로 주문 시 안내 메시지가 출력되는가
+
+---
+
+## Phase 3 — 모니터링 + 출고 처리
+
+### 목표
+시스템 전체 상태를 한눈에 파악할 수 있는 모니터링 화면을 제공하고,
+CONFIRMED 주문을 출고 처리하여 재고를 차감하는 흐름을 완성한다.
+
+### 구현 범위
+- **모니터링**
+  - 상태별(RESERVED / CONFIRMED / PRODUCING / RELEASE) 주문 목록·수량 집계 (`REJECTED` 필터 제외)
+  - 시료별 재고 상태 판정 로직: 여유 / 부족 / 고갈(stock=0)
+  - DataMonitor PoC의 화면 레이아웃 참조
+- **출고 처리**
+  - CONFIRMED 주문 목록 표시
+  - 출고 실행: `RELEASE` 전환 + `sample.stock -= order.quantity`
+- 통합 테스트용 시드 데이터: DummyDataGenerator PoC의 `DataFactory(seed)` 패턴 적용
+- Regression Test: 출고 후 재고 차감, 모니터링 집계 정확성
+- Safety Test: 이미 출고된 주문 재출고 시도, CONFIRMED 아닌 주문 출고 시도
+
+### 테스트 포인트 (사용자 확인 항목)
+- [ ] 모니터링 화면에서 상태별 주문 수가 정확히 집계되는가
+- [ ] REJECTED 주문이 모니터링에서 제외되는가
+- [ ] 재고 0인 시료가 "고갈"로 표시되는가
+- [ ] 출고 처리 후 해당 시료의 재고가 즉시 차감되는가
+- [ ] 출고 후 주문 상태가 RELEASE로 변경되고 모니터링에 반영되는가
+
+---
+
+## Phase 4 — 생산 라인
+
+### 목표
+PRODUCING 상태 주문의 생산 스케줄링을 FIFO 큐로 관리하고,
+생산 완료 시 CONFIRMED로 전환하는 생산 라인 기능을 완성하여 전체 주문 흐름을 닫는다.
+
+### 구현 범위
+- `ProductionLine` 엔티티 (도메인 모델 참조)
+- `ProductionQueue` — `java.util.Queue<ProductionLine>` FIFO 구조, JSON 영속화
+- Phase 2의 PRODUCING 전환 시점에 `ProductionLine` 생성 및 큐 enqueue
+- 생산량·시간 계산 공식 구현 (도메인 모델 공식 참조, `Math.ceil` 사용)
+- 생산 현황 표시: 현재 큐 head의 주문 정보·예상 생산량·예상 시간
+- 대기 주문(큐 전체) 목록 출력
+- 생산 완료 처리: 큐에서 dequeue → `PRODUCING` → `CONFIRMED` + `sample.stock += scheduledQty`
+- Regression Test: 공식 계산 정확성, FIFO 순서 보장, 완료 후 상태 전환
+- Safety Test: 큐 비어있을 때 완료 처리 시도, yieldRate 경계값(0, 1)
+
+### 테스트 포인트 (사용자 확인 항목)
+- [ ] 재고 부족 주문 승인 시 생산 라인에 자동 등록되는가
+- [ ] 생산 큐가 FIFO 순서(먼저 들어온 것이 먼저 출력)로 표시되는가
+- [ ] 생산량이 공식(`ceil(부족분 / (수율 × 0.9))`)대로 올림 처리되는가
+- [ ] 생산 완료 처리 후 주문이 CONFIRMED로 전환되는가
+- [ ] 생산 완료 후 해당 시료의 재고가 증가하는가
+- [ ] 생산 완료 → 출고(Phase 3)까지 이어지는 전체 흐름이 동작하는가
+
+---
+
+---
+
+## TDD 사이클 기록 · REVIEW 결과 — Phase 1
+
+> Phase 1 TDD 사이클·REVIEW 결과 → **[docs/design/phase1.md](design/phase1.md)**
+
+---
+
+## Phase 진행 순서 요약
+
+```
+Phase 1  시료 관리 (등록·조회·검색·JSON 영속성)
+   ↓
+Phase 2  주문 흐름 (접수·승인 분기·거절)
+   ↓
+Phase 3  모니터링 + 출고 (전체 상태 가시성 + 재고 차감)
+   ↓
+Phase 4  생산 라인 (FIFO 큐·생산 계산·완료 처리 → 전체 흐름 완결)
+```
