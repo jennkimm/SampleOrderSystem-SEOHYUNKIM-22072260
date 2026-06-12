@@ -9,6 +9,7 @@ import com.ssemi.sampleorder.repository.ProductionLineRepository;
 import com.ssemi.sampleorder.repository.SampleRepository;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProductionService {
@@ -46,5 +47,17 @@ public class ProductionService {
 
     public List<ProductionLine> getQueue() throws IOException {
         return productionLineRepository.findAll();
+    }
+
+    public List<ProductionLineDetail> getQueueDetails() throws IOException {
+        List<ProductionLine> queue = productionLineRepository.findAll();
+        List<ProductionLineDetail> details = new ArrayList<>();
+        for (ProductionLine pl : queue) {
+            Order order   = orderRepository.findById(pl.getOrderId());
+            Sample sample = sampleRepository.findById(order.getSampleId());
+            details.add(new ProductionLineDetail(pl, sample.getName(),
+                    order.getQuantity(), sample.getStock()));
+        }
+        return details;
     }
 }

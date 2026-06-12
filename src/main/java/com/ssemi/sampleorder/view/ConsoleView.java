@@ -5,6 +5,7 @@ import com.ssemi.sampleorder.model.OrderStatus;
 import com.ssemi.sampleorder.model.ProductionLine;
 import com.ssemi.sampleorder.model.Sample;
 import com.ssemi.sampleorder.model.StockStatus;
+import com.ssemi.sampleorder.service.ProductionLineDetail;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -207,30 +208,51 @@ public class ConsoleView {
 
     public void printProductionMenu() {
         System.out.println("\n--- 생산 라인 ---");
-        System.out.println("  1. 생산 중 주문 목록 조회 (PRODUCING)");
+        System.out.println("  1. 생산 라인 조회");
         System.out.println("  2. 생산 완료 처리 (PRODUCING → CONFIRMED)");
         System.out.println("  0. 메인 메뉴로");
         System.out.print("선택: ");
     }
 
-    public void printProductionQueue(List<ProductionLine> queue) {
-        if (queue.isEmpty()) {
-            System.out.println("  생산 대기 중인 주문이 없습니다.");
+    public void printProductionLine(List<ProductionLineDetail> details) {
+        if (details.isEmpty()) {
+            System.out.println("  생산 라인이 비어 있습니다.");
             return;
         }
-        System.out.printf("%n  === 생산 라인 대기 목록 (FIFO) — 총 %d건 ===%n", queue.size());
-        System.out.printf("  %-4s %-12s %6s %8s %10s%n", "순서", "주문ID", "부족분", "실생산량", "예상 완료");
-        System.out.println("  " + "-".repeat(46));
         LocalTime now = LocalTime.now();
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
-        double cumulativeMinutes = 0;
-        for (int i = 0; i < queue.size(); i++) {
-            ProductionLine pl = queue.get(i);
-            cumulativeMinutes += pl.getEstimatedTime();
-            LocalTime completionTime = now.plusMinutes(Math.round(cumulativeMinutes));
-            System.out.printf("  %-4d %-12s %6d %8d %10s%n",
-                    i + 1, pl.getOrderId(), pl.getShortfall(),
-                    pl.getScheduledQty(), completionTime.format(fmt));
+
+        ProductionLineDetail headDetail = details.get(0);
+        ProductionLine head = headDetail.getProductionLine();
+        LocalTime headCompletion = now.plusMinutes(Math.round(head.getEstimatedTime()));
+
+        System.out.println("\n  ══════════════ 현재 생산 중 ══════════════");
+        System.out.printf("  주문번호: %-16s  시료: %s%n",
+                head.getOrderId(), headDetail.getSampleName());
+        System.out.printf("  주문량: %dea   재고: %dea  →  부족분: %dea  →  생산량: %dea%n",
+                headDetail.getOrderQuantity(), headDetail.getSampleStock(),
+                head.getShortfall(), head.getScheduledQty());
+        System.out.printf("  예상 완료: %s  (약 %.0f분)%n",
+                headCompletion.format(fmt), head.getEstimatedTime());
+        System.out.printf("  [%s] 생산 진행 중%n", "█".repeat(38));
+        System.out.println("  ═══════════════════════════════════════════");
+
+        if (details.size() > 1) {
+            System.out.printf("%n  --- 대기 중 (%d건) ---%n", details.size() - 1);
+            System.out.printf("  %-4s %-14s %-16s %6s %6s %8s %10s%n",
+                    "순서", "주문ID", "시료명", "주문량", "부족분", "실생산량", "예상완료");
+            System.out.println("  " + "─".repeat(70));
+            double cumulative = head.getEstimatedTime();
+            for (int i = 1; i < details.size(); i++) {
+                ProductionLineDetail d = details.get(i);
+                ProductionLine pl = d.getProductionLine();
+                cumulative += pl.getEstimatedTime();
+                LocalTime completionTime = now.plusMinutes(Math.round(cumulative));
+                System.out.printf("  %-4d %-14s %-16s %6d %6d %8d %10s%n",
+                        i, pl.getOrderId(), d.getSampleName(),
+                        d.getOrderQuantity(), pl.getShortfall(),
+                        pl.getScheduledQty(), completionTime.format(fmt));
+            }
         }
     }
 

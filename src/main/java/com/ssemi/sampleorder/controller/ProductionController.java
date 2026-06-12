@@ -1,6 +1,7 @@
 package com.ssemi.sampleorder.controller;
 
 import com.ssemi.sampleorder.model.ProductionLine;
+import com.ssemi.sampleorder.service.ProductionLineDetail;
 import com.ssemi.sampleorder.service.ProductionService;
 import com.ssemi.sampleorder.view.ConsoleView;
 
@@ -32,10 +33,10 @@ public class ProductionController {
 
     private void listQueue() {
         try {
-            List<ProductionLine> queue = service.getQueue();
-            view.printProductionQueue(queue);
+            List<ProductionLineDetail> details = service.getQueueDetails();
+            view.printProductionLine(details);
         } catch (IOException e) {
-            view.printMessage("[오류] 생산 큐 조회 실패: " + e.getMessage());
+            view.printMessage("[오류] 생산 라인 조회 실패: " + e.getMessage());
         }
     }
 
