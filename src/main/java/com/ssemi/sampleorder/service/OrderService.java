@@ -28,7 +28,7 @@ public class OrderService {
         orderRepository.save(new Order(orderId, sampleId, customerName, quantity, OrderStatus.RESERVED));
     }
 
-    public void approve(String orderId) throws IOException {
+    public OrderStatus approve(String orderId) throws IOException {
         Order order = orderRepository.findById(orderId);
         if (order.getStatus() != OrderStatus.RESERVED) {
             throw new IllegalStateException("RESERVED 상태의 주문만 승인할 수 있습니다. 현재 상태: " + order.getStatus());
@@ -37,6 +37,7 @@ public class OrderService {
         OrderStatus next = sample.getStock() >= order.getQuantity() ? OrderStatus.CONFIRMED : OrderStatus.PRODUCING;
         order.setStatus(next);
         orderRepository.update(order);
+        return next;
     }
 
     public void reject(String orderId) throws IOException {
@@ -48,8 +49,30 @@ public class OrderService {
         orderRepository.update(order);
     }
 
+    public void release(String orderId) throws IOException {
+        Order order = orderRepository.findById(orderId);
+        if (order.getStatus() != OrderStatus.CONFIRMED) {
+            throw new IllegalStateException("CONFIRMED 상태의 주문만 출고할 수 있습니다. 현재 상태: " + order.getStatus());
+        }
+        Sample sample = sampleRepository.findById(order.getSampleId());
+        sample.setStock(sample.getStock() - order.getQuantity());
+        sampleRepository.update(sample);
+        order.setStatus(OrderStatus.RELEASE);
+        orderRepository.update(order);
+    }
+
+    public int getShortfall(String orderId) throws IOException {
+        Order order = orderRepository.findById(orderId);
+        Sample sample = sampleRepository.findById(order.getSampleId());
+        return Math.max(0, order.getQuantity() - sample.getStock());
+    }
+
     public List<Order> getReserved() throws IOException {
         return orderRepository.findByStatus(OrderStatus.RESERVED);
+    }
+
+    public List<Order> getByStatus(OrderStatus status) throws IOException {
+        return orderRepository.findByStatus(status);
     }
 
     public List<Order> getAll() throws IOException {

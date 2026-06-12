@@ -1,9 +1,12 @@
 package com.ssemi.sampleorder.controller;
 
+import com.ssemi.sampleorder.model.Order;
+import com.ssemi.sampleorder.model.OrderStatus;
 import com.ssemi.sampleorder.service.OrderService;
 import com.ssemi.sampleorder.view.ConsoleView;
 
 import java.io.IOException;
+import java.util.List;
 
 public class OrderController {
 
@@ -55,9 +58,24 @@ public class OrderController {
 
     private void approve() {
         try {
+            List<Order> reserved = service.getReserved();
+            if (reserved.isEmpty()) {
+                view.printMessage("승인 대기 중인 주문이 없습니다.");
+                return;
+            }
+            view.printOrderList(reserved);
             String orderId = view.promptOrderId();
-            service.approve(orderId);
-            view.printMessage("주문 '" + orderId + "' 이(가) 승인되었습니다.");
+            int shortfall = service.getShortfall(orderId);
+            if (shortfall > 0) {
+                view.printStockShortfallWarning(shortfall);
+                if (!view.promptYesNo()) {
+                    service.reject(orderId);
+                    view.printMessage("주문 '" + orderId + "' 이(가) 거절 처리되었습니다.");
+                    return;
+                }
+            }
+            OrderStatus newStatus = service.approve(orderId);
+            view.printApprovalResult(orderId, newStatus);
         } catch (IllegalStateException | IllegalArgumentException e) {
             view.printMessage("[오류] " + e.getMessage());
         } catch (IOException e) {

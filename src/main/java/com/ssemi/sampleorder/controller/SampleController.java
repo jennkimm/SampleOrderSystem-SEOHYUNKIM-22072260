@@ -9,6 +9,8 @@ import java.util.List;
 
 public class SampleController {
 
+    private static final int PAGE_SIZE = 5;
+
     private final SampleService service;
     private final ConsoleView view;
 
@@ -46,7 +48,24 @@ public class SampleController {
     private void listAll() {
         try {
             List<Sample> samples = service.getAll();
-            view.printSampleList(samples);
+            if (samples.isEmpty()) {
+                view.printMessage("등록된 시료가 없습니다.");
+                return;
+            }
+            int totalPages = (int) Math.ceil((double) samples.size() / PAGE_SIZE);
+            int currentPage = 1;
+            while (true) {
+                int from = (currentPage - 1) * PAGE_SIZE;
+                int to = Math.min(from + PAGE_SIZE, samples.size());
+                view.printSamplePage(samples.subList(from, to), currentPage, totalPages, samples.size());
+                String nav = view.promptPageNavigation();
+                switch (nav) {
+                    case "<" -> { if (currentPage > 1) currentPage--; }
+                    case ">" -> { if (currentPage < totalPages) currentPage++; }
+                    case "0", "" -> { return; }
+                    default -> {} // 그 외 입력 무시
+                }
+            }
         } catch (IOException e) {
             view.printMessage("[오류] 시료 조회 실패: " + e.getMessage());
         }
