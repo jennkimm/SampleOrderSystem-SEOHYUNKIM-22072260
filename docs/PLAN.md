@@ -29,28 +29,7 @@
 
 ## Phase 2 — 주문 접수 + 승인/거절
 
-### 목표
-고객 주문을 접수하고, 재고 상황에 따라 자동 분기(CONFIRMED / PRODUCING)하는 승인 로직을 완성한다.
-
-### 구현 범위
-- `Order` 엔티티 (도메인 모델 참조)
-- `OrderStatus` enum: `RESERVED`, `CONFIRMED`, `PRODUCING`, `REJECTED`, `RELEASE`
-- 주문 접수: 시료 ID·고객명·수량 입력 → `RESERVED` 저장
-- RESERVED 목록 조회
-- 주문 승인 분기:
-  - `stock >= quantity` → 즉시 `CONFIRMED`
-  - `stock < quantity` → `PRODUCING` (생산 라인 UI는 Phase 4, 상태만 전환)
-- 주문 거절: `REJECTED`
-- 예외 처리: 미등록 시료 ID로 주문 시도, 이미 처리된 주문 재승인 시도
-- Regression Test: 분기 로직 정상 동작 검증
-- Safety Test: 재고 경계값(정확히 일치), 음수 수량 입력
-
-### 테스트 포인트 (사용자 확인 항목)
-- [ ] 주문 접수 후 RESERVED 목록에 표시되는가
-- [ ] 재고가 충분한 시료를 승인하면 CONFIRMED로 전환되는가
-- [ ] 재고가 부족한 시료를 승인하면 PRODUCING으로 전환되는가
-- [ ] 거절 처리 후 해당 주문이 RESERVED 목록에서 사라지는가
-- [ ] 존재하지 않는 시료 ID로 주문 시 안내 메시지가 출력되는가
+> 상세 설계·TDD 사이클·REVIEW 결과 → **[docs/design/phase2.md](design/phase2.md)**
 
 ---
 

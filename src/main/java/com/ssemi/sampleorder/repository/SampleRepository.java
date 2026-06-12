@@ -31,4 +31,19 @@ public class SampleRepository {
                 .filter(s -> s.getName().contains(keyword))
                 .toList();
     }
+
+    public Sample findById(String sampleId) throws IOException {
+        return fileRepo.readAll().stream()
+                .filter(s -> s.getSampleId().equals(sampleId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "ID " + sampleId + " 에 해당하는 시료을(를) 찾을 수 없습니다."));
+    }
+
+    public void update(Sample sample) throws IOException {
+        List<Sample> all = fileRepo.readAll().stream()
+                .map(s -> s.getSampleId().equals(sample.getSampleId()) ? sample : s)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        fileRepo.writeAll(all);
+    }
 }
