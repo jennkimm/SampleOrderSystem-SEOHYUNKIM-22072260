@@ -35,28 +35,7 @@
 
 ## Phase 3 — 모니터링 + 출고 처리
 
-### 목표
-시스템 전체 상태를 한눈에 파악할 수 있는 모니터링 화면을 제공하고,
-CONFIRMED 주문을 출고 처리하여 재고를 차감하는 흐름을 완성한다.
-
-### 구현 범위
-- **모니터링**
-  - 상태별(RESERVED / CONFIRMED / PRODUCING / RELEASE) 주문 목록·수량 집계 (`REJECTED` 필터 제외)
-  - 시료별 재고 상태 판정 로직: 여유 / 부족 / 고갈(stock=0)
-  - DataMonitor PoC의 화면 레이아웃 참조
-- **출고 처리**
-  - CONFIRMED 주문 목록 표시
-  - 출고 실행: `RELEASE` 전환 + `sample.stock -= order.quantity`
-- 통합 테스트용 시드 데이터: DummyDataGenerator PoC의 `DataFactory(seed)` 패턴 적용
-- Regression Test: 출고 후 재고 차감, 모니터링 집계 정확성
-- Safety Test: 이미 출고된 주문 재출고 시도, CONFIRMED 아닌 주문 출고 시도
-
-### 테스트 포인트 (사용자 확인 항목)
-- [ ] 모니터링 화면에서 상태별 주문 수가 정확히 집계되는가
-- [ ] REJECTED 주문이 모니터링에서 제외되는가
-- [ ] 재고 0인 시료가 "고갈"로 표시되는가
-- [ ] 출고 처리 후 해당 시료의 재고가 즉시 차감되는가
-- [ ] 출고 후 주문 상태가 RELEASE로 변경되고 모니터링에 반영되는가
+> 상세 설계·TDD 사이클·REVIEW 결과 → **[docs/design/phase3.md](design/phase3.md)**
 
 ---
 
