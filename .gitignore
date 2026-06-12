@@ -9,3 +9,6 @@ out/
 
 # JVM crash logs
 hs_err_pid*.log
+
+# Runtime data
+data/
