@@ -1,8 +1,8 @@
 [ {
   "sampleId" : "S-001",
-  "name" : "실리콘 웨이퍼-12인치",
+  "name" : "실리콘 웨이퍼 12인치",
   "avgProductionTime" : 1.0,
-  "yieldRate" : 0.9,
+  "yieldRate" : 0.90,
   "stock" : 400
 }, {
   "sampleId" : "S-002",
@@ -14,7 +14,7 @@
   "sampleId" : "S-003",
   "name" : "삼성전자 파운드리",
   "avgProductionTime" : 0.6,
-  "yieldRate" : 0.8,
+  "yieldRate" : 0.80,
   "stock" : 180
 }, {
   "sampleId" : "S-004",
@@ -26,7 +26,7 @@
   "sampleId" : "S-005",
   "name" : "SiC 파워 칩",
   "avgProductionTime" : 3.0,
-  "yieldRate" : 0.7,
+  "yieldRate" : 0.70,
   "stock" : 55
 }, {
   "sampleId" : "S-006",
@@ -46,4 +46,16 @@
   "avgProductionTime" : 4.0,
   "yieldRate" : 0.65,
   "stock" : 30
+}, {
+  "sampleId" : "S-009",
+  "name" : "InP HBT 칩",
+  "avgProductionTime" : 3.5,
+  "yieldRate" : 0.72,
+  "stock" : 150
+}, {
+  "sampleId" : "S-010",
+  "name" : "BCD 전력 소자",
+  "avgProductionTime" : 2.0,
+  "yieldRate" : 0.83,
+  "stock" : 75
 } ]
