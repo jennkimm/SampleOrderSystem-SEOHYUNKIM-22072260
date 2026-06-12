@@ -36,11 +36,21 @@ public class OrderService {
         if (order.getStatus() != OrderStatus.RESERVED) {
             throw new IllegalStateException("RESERVED 상태의 주문만 승인할 수 있습니다. 현재 상태: " + order.getStatus());
         }
+        if (hasProductionInProgress(orderId)) {
+            throw new IllegalStateException(
+                    "시료 " + order.getSampleId() + " 의 생산이 진행 중입니다. 생산 완료(CONFIRMED 전환) 후 승인이 가능합니다.");
+        }
         int effectiveStock = computeEffectiveStock(order.getSampleId(), productionQueue);
         OrderStatus next = effectiveStock >= order.getQuantity() ? OrderStatus.CONFIRMED : OrderStatus.PRODUCING;
         order.setStatus(next);
         orderRepository.update(order);
         return next;
+    }
+
+    public boolean hasProductionInProgress(String orderId) throws IOException {
+        Order order = orderRepository.findById(orderId);
+        return orderRepository.findByStatus(OrderStatus.PRODUCING).stream()
+                .anyMatch(o -> o.getSampleId().equals(order.getSampleId()));
     }
 
     private int computeEffectiveStock(String sampleId, List<ProductionLine> productionQueue) throws IOException {

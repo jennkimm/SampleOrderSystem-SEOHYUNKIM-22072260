@@ -69,6 +69,10 @@ public class OrderController {
             }
             view.printOrderList(reserved);
             String orderId = view.promptOrderId();
+            if (service.hasProductionInProgress(orderId)) {
+                view.printMessage("해당 시료의 생산이 진행 중입니다. 생산 완료(CONFIRMED 전환) 후 승인이 가능합니다.");
+                return;
+            }
             List<ProductionLine> queue = productionService.getQueue();
             int shortfall = service.getShortfall(orderId, queue);
             if (shortfall > 0) {
